@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0d44e190-f58d-4f86-82df-946fda35e0a9" basePath="/" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="81feb6cd-4c55-4ad4-9672-b70cc59d49a0" >
+		<file:connection workingDir="C:\Users\allem\OneDrive\Desktop\output" />
+	</file:config>
+	<flow name="multipartformFlow" doc:id="95dc1914-1f9e-43bb-a69a-7063e274c07c" >
+		<http:listener doc:name="Listener" doc:id="bcbcb221-1dc0-4b06-ae94-2ca3dc29e54a" config-ref="HTTP_Listener_config" path="/upload" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3ad61728-56da-44a7-af11-8cbcc7410d6b" message="#[output application/json --- payload]"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="9b8a6f59-5781-4dc8-a8b6-dce38ff39286" >
+			<route >
+				<logger level="INFO" doc:name="checkbox value" doc:id="5f63435e-2ead-487f-ac89-0565897c96e4" message='#["checkbox value - " ++ payload.parts.checkbox.content]'/>
+				<set-variable value="#[payload.parts.checkbox.content]" doc:name="checkbox" doc:id="861a41c0-50ad-43d1-93b0-ec59f2205524" variableName="checkbox"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="password" doc:id="e4265076-4b75-4ed2-8e4e-ac2ea2a08995" message='#["password value - " ++ payload.parts.password.content]'/>
+				<set-variable value="#[payload.parts.password.content]" doc:name="password" doc:id="9386c29d-b839-4bf8-9837-0efffd1e50ea" variableName="password"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="text" doc:id="b7d61681-e491-43ac-bd55-33881824cec1" />
+				<set-variable value="payload.parts.text.content" doc:name="text" doc:id="59893714-c528-4ba2-a916-73c9ad68c441" variableName="text"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="file name" doc:id="daf7962c-e4b7-4560-998d-f5814f0c7f3e" message="#[payload.parts.myfile.headers.'Content-Disposition'.filename]"/>
+				<logger level="INFO" doc:name="content type" doc:id="88fbf674-57cd-4da8-8791-5b1e6ce43520" message="#[payload.parts.myfile.headers.'Content-Type']"/>
+				<file:write doc:name="Write" doc:id="cd1858c0-b648-4306-8f77-f4461c1dc86f" config-ref="File_Config" path="picture.png">
+					<file:content ><![CDATA[#[payload.parts.myfile.content write "application/octet-stream"]]]></file:content>
+				</file:write>
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="3883d2bd-a6d6-4b6c-8339-45d5423efe42" message="#[payload]"/>
+	</flow>
+</mule>
